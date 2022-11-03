@@ -1,76 +1,56 @@
-/****************************************************************************
+package drawing; /****************************************************************************
  * @author Josaphat Mayuba Ndele	et Andres Garcia Cotton					*					*
  * Les programmes permet a faire de dessin de forme rectanglulaire et 		*
  * les ellipses	on peut l'enregistre et ouvrir le meme fichier.				*											*
  * 																			*
  ****************************************************************************/
+import Geometry.FormGeo;
+import constants.GeoConstants;
+import enums.GeoFormType;
+
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.awt.geom.RectangularShape;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
+import java.util.List;
 
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 
-/**
- * @param DessinPanel2
- *            tableau contenant les coordonner de dessin a selectionner
- * @param formesGeo
- *            Tableau contenant les formes geometriques
- * @param courant
- *            lorsqu'un figure est selectionner
- * @param lastPointPress
- *            le point precedent
- * @param Toutselec
- *            une facon pour faire la verification en cas ou on a selectionner
- *            ou nom voir mouseDragged
- * @param Toutselec
- *            sert a montre si tout est selectionner une methode cree pour
- *            verifier
- * 
- */
 public class DessinPanel2 extends JPanel {
+	public List<FormGeo> getFormesGeo() {
+		return formesGeo;
+	}
 
-	private ArrayList<FormGeo> formesGeo;
-	private ArrayList<FormGeo> selectedFormesGeo;
-	private FormGeo courant;
+	private final ArrayList<FormGeo> formesGeo;
+	private final ArrayList<FormGeo> selectedFormesGeo;
+
+	private FormGeo geoForm;
 	private Point2D lastPointPress;
 	private FormGeo lastFormGeo = null;
-	private String lastFichier = ".";
-	private int Toutselec;
-	private Color couleur;
-	private int TAILLECARREE = 30;
-	private FormGeo.Type typeDeForme = FormGeo.Type.RECT;
-	private Object object;
+
+	private int allSelected;
+
+	private Color color;
+
+	private GeoFormType geoFormType = GeoFormType.RECT.RECT;
+
 	private int touche;
 
 	public DessinPanel2() {
-		formesGeo = new ArrayList<FormGeo>();
-		selectedFormesGeo = new ArrayList<FormGeo>();
-		courant = null;
+		formesGeo = new ArrayList<>();
+		selectedFormesGeo = new ArrayList<>();
+		geoForm = null;
 		addMouseListener(new MouseHandler());
 		addMouseMotionListener(new MouseMotionHandler());
-	}
-
-	// NON UTILISER POUR NOTRE PROGRAMME
-	public void setFichier(String n) {
-		lastFichier = n;
-	}
-
-	public String getFichier() {
-		return lastFichier;
 	}
 
 	// EFFACE TOUT
@@ -103,7 +83,7 @@ public class DessinPanel2 extends JPanel {
 	}
 
 	public void selectTout() {
-		Toutselec = 1;
+		allSelected = 1;
 		selectedFormesGeo.clear();
 		selectedFormesGeo.addAll(formesGeo);
 		for (FormGeo f : selectedFormesGeo) {
@@ -113,25 +93,25 @@ public class DessinPanel2 extends JPanel {
 	}
 
 	public void coloreSelected() {
-		Color couleur = FormGeo.getCouleurCourante();
+		Color couleur = FormGeo.getCurrentColor();
 		for (FormGeo f : selectedFormesGeo) {
-			f.setCouleur(couleur);
+			f.setColor(couleur);
 		}
 		paintComponent(getGraphics());
 	}
 
 	public void setCouleur(Color c) {
-		FormGeo.setCouleurCourante(c);
+		FormGeo.setCurrentColor(c);
 	}
 
-	public void setTypeDessin(FormGeo.Type f) {
-		typeDeForme = f;
+	public void setTypeDessin(GeoFormType f) {
+		geoFormType = f;
 	}
 
 	public FormGeo find(Point2D p) {
 
 		for (FormGeo f : formesGeo) {
-			if (f.contains(p)) {
+			if (f.getRectangularShape().contains(p)) {
 				return f;
 			}
 		}
@@ -144,31 +124,24 @@ public class DessinPanel2 extends JPanel {
 		Graphics2D g2 = (Graphics2D) g;
 		for (FormGeo f : formesGeo) {
 			f.dessine(g2);
-			if (courant != null) {
-				lightSquares(g2, courant);
+			if (geoForm != null) {
+				lightSquares(g2, geoForm.getRectangularShape());
 				repaint();
 			}
-			if (Toutselec == 1) {// TOUTSELEC EST UTILISER POUR
+			if (allSelected == 1) {// TOUTSELEC EST UTILISER POUR
 				for (FormGeo selec : selectedFormesGeo) {
-					lightSquares(g2, selec);
+					lightSquares(g2, selec.getRectangularShape());
 					repaint();
 				}
 			}
 
 		}
 	}
-
-	/**
-	 * @param lightSquares
-	 *            cree le point carre pour unE FIGURE selectionner
-	 * @param g2D
-	 * @param f
-	 */
-	public void lightSquares(Graphics2D g2D, FormGeo f) {
-		double x = f.getX();
-		double y = f.getY();
-		double w = f.getWidth();
-		double h = f.getHeight();
+	public void lightSquares(Graphics2D g2D, RectangularShape rectangularShape) {
+		double x = rectangularShape.getX();
+		double y = rectangularShape.getY();
+		double w = rectangularShape.getWidth();
+		double h = rectangularShape.getHeight();
 		g2D.setColor(Color.BLACK);
 
 		g2D.fill(new Rectangle.Double(x + w * 0.5 - 3.0, y - 3.0, 6.0, 6.0));
@@ -180,7 +153,6 @@ public class DessinPanel2 extends JPanel {
 
 	}
 
-	// AJOUTE LA FORME DANS LE TABLEAU FORMEGEO
 	public void add(FormGeo f) {
 		formesGeo.add(f);
 	}
@@ -196,7 +168,7 @@ public class DessinPanel2 extends JPanel {
 		public void mousePressed(MouseEvent event) {
 
 			Point p = event.getPoint();
-			courant = find(p);
+			geoForm = find(p);
 			lastPointPress = p;
 			lastFormGeo = null;
 
@@ -204,37 +176,25 @@ public class DessinPanel2 extends JPanel {
 
 		// LORS DE CLIQUE DE LA SOURIS
 		public void mouseClicked(MouseEvent event) {
-			Toutselec = 0;
+			allSelected = 0;
 			Point p = event.getPoint();
 			double x = p.getX();
 			double y = p.getY();
-			if (courant == null && lastFormGeo == null) {
-				FormGeo f = new FormGeo(typeDeForme, x - TAILLECARREE / 2, y
-						- TAILLECARREE / 2, TAILLECARREE, TAILLECARREE);
-				f.setCouleur(FormGeo.getCouleurCourante());
+			if (geoForm == null && lastFormGeo == null) {
+				FormGeo f = new FormGeo(geoFormType, x - GeoConstants.SQUARE_SIZE / 2, y
+						- GeoConstants.SQUARE_SIZE / 2, GeoConstants.SQUARE_SIZE, GeoConstants.SQUARE_SIZE);
+				f.setColor(FormGeo.getCurrentColor());
 				add(f);
 			} else {
-				if (!selectedFormesGeo.contains(courant)) {
-					courant.setSelected(true);
-					selectedFormesGeo.add(courant);
+				if (!selectedFormesGeo.contains(geoForm)) {
+					geoForm.setSelected(true);
+					selectedFormesGeo.add(geoForm);
 				}
 			}
 			repaint();
 		}
 	}
 
-	/**
-	 * * @
-	 * 
-	 * @exception ConcurrentModificationException
-	 *                Cette exception peut être levée par les méthodes qui ont
-	 *                détecté une modification concurrente d'un objet lorsque
-	 *                cette modification n'est pas autorisée.
-	 *                "http://docs.oracle.com/javase/7/docs/api/java/util/
-	 *                ConcurrentModificationException.html"
-	 * 
-	 * 
-	 */
 	// Lorsque on appui sur Maj(shift) enfonce
 
 	private class MouseMotionHandler implements MouseMotionListener {
@@ -251,10 +211,10 @@ public class DessinPanel2 extends JPanel {
 		public void mouseDragged(MouseEvent event) {
 
 			Point p = event.getPoint();
-			if (courant == null) {
+			if (geoForm == null) {
 				if (lastFormGeo == null) {
-					lastFormGeo = new FormGeo(typeDeForme);
-					lastFormGeo.setCouleur(FormGeo.getCouleurCourante());
+					lastFormGeo = new FormGeo(geoFormType);
+					lastFormGeo.setColor(FormGeo.getCurrentColor());
 					add(lastFormGeo);
 				}
 				lastFormGeo.setFrameFromDiagonal(lastPointPress, p);
@@ -262,8 +222,8 @@ public class DessinPanel2 extends JPanel {
 				double dx = p.getX() - lastPointPress.getX();
 				double dy = p.getY() - lastPointPress.getY();
 
-				if (!selectedFormesGeo.contains(courant)) {
-					courant.moveBy(dx, dy);
+				if (!selectedFormesGeo.contains(geoForm)) {
+					geoForm.moveBy(dx, dy);
 
 				}
 
@@ -273,7 +233,7 @@ public class DessinPanel2 extends JPanel {
 
 					for (FormGeo f : selectedFormesGeo) {
 						f.moveBy(dx, dy);
-						if (Toutselec != 1) {
+						if (allSelected != 1) {
 							// Pour arreter la selection de plusieur fichier
 							// et le deplacer en meme temp
 							// en cas ou on clique appui pas la touche
@@ -298,7 +258,7 @@ public class DessinPanel2 extends JPanel {
 					 *                modification n'est pas autorisée.
 					 */
 				} catch (ConcurrentModificationException e) {
-					Toutselec = 0;
+					allSelected = 0;
 				}
 				lastPointPress = p;
 			}
@@ -306,51 +266,5 @@ public class DessinPanel2 extends JPanel {
 		}
 	}
 
-	// ENREGISTRER FICHIER
-	public void enregistre(ObjectOutputStream out) {
-		try {
-			for (FormGeo f : formesGeo) {
-				f.setSelected(true);
-				out.writeObject(f);
-
-			}
-
-		} catch (IOException io) {
-			System.exit(1);
-		}
-	}
-
-	// OUVRIR FICHIER SAUVERGARDER
-	/**
-	 * @exception IOException
-	 *                ClassNotFoundException Attrape l'exception lors que la
-	 *                chaine de caractere du fichier ne pas egal a nul pendant
-	 *                l'execution de la boucle while
-	 * 
-	 * @param in
-	 *            objet a lire
-	 */
-	public void lireInfo(ObjectInputStream in) {
-		try {
-			// EFFACE TOUT LE FIGURE EN CAS D'OUVERTURE D'UN FICHIER
-			// SAUVERGARDER
-			formesGeo.clear();
-
-			object = in.readObject();
-			while (object != null) {
-				if (object != null) {
-					formesGeo.add((FormGeo) object);
-					object = in.readObject();
-				}
-			}
-			in.close();
-			repaint();
-		}
-
-		catch (IOException | ClassNotFoundException e) {
-			formesGeo.add((FormGeo) object);
-			repaint();
-		}
-	}
 
 }

@@ -1,9 +1,12 @@
-/****************************************************************************
+package drawing; /****************************************************************************
  * @author Josaphat Mayuba Ndele	et Andres Garcia Cotton					*					*
  * Les programmes permet a faire de dessin de forme rectanglulaire et 		*
  * les ellipses	on peut l'enregistre et ouvrir le meme fichier.				*											*
  * 																			*
  ****************************************************************************/
+import enums.GeoFormType;
+import utils.FileUtils;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -41,27 +44,17 @@ import javax.swing.KeyStroke;
 public class DessinTest2 {
 
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				DessinFrame application = new DessinFrame("paint drawing");
-				application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		EventQueue.invokeLater(() -> {
+			DessinFrame application = new DessinFrame("paint drawing");
+			application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-				application.setSize(800, 600);
-				application.setVisible(true);
+			application.setSize(800, 600);
+			application.setVisible(true);
 
-			}
 		});
 	}
 }
 
-/**
- * 
- * @param DessinFrame
- *            permet de construire l'apparence du programme ,ils contiennent les
- *            boutons et de lier les actions aux boutons
- * @see PanelDesign
- *            le panneau qui permet a faire le dessin
- */
 class DessinFrame extends JFrame {
 	private DessinPanel2 PanelDesign;
 	private ColorComponent couleur;
@@ -92,41 +85,34 @@ class DessinFrame extends JFrame {
 		
 		
 		// LES ACTION POUR SOUS MENU OUVRIR ET SAUVERGARDER
-		openItem.addActionListener(new ActionListener() {
+		openItem.addActionListener(x -> {
+			JFileChooser fileChooser = new JFileChooser();
+			int result = fileChooser.showOpenDialog(null);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				try {
+					File file2 = fileChooser.getSelectedFile();
+					FileInputStream ouvre = new FileInputStream(file2);
+					ObjectInputStream ouvrir = new ObjectInputStream(ouvre);
+					FileUtils.readInfo(ouvrir, PanelDesign.getFormesGeo());
 
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileChooser = new JFileChooser();
-				int result = fileChooser.showOpenDialog(null);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					try {
-						File file2 = fileChooser.getSelectedFile();
-						FileInputStream ouvre = new FileInputStream(file2);
-						ObjectInputStream ouvrir = new ObjectInputStream(ouvre);
-						PanelDesign.lireInfo(ouvrir);
-
-					} catch (IOException io) {
-						System.exit(1);
-					}
+				} catch (IOException | ClassNotFoundException e) {
+					System.exit(1);
 				}
 			}
 		});
-		sauvegarderItem.addActionListener(new ActionListener() {
+		sauvegarderItem.addActionListener(e -> {
+			JFileChooser fileChooser = new JFileChooser();
+			int result = fileChooser.showSaveDialog(null);
+			if (result == JFileChooser.APPROVE_OPTION) {
+				try {
+					File file = fileChooser.getSelectedFile();
+					FileOutputStream enr = new FileOutputStream(file);
+					ObjectOutputStream enregistre = new ObjectOutputStream(enr);
 
-			public void actionPerformed(ActionEvent e) {
-				JFileChooser fileChooser = new JFileChooser();
-				int result = fileChooser.showSaveDialog(null);
-				if (result == JFileChooser.APPROVE_OPTION) {
-					try {
-						File file = fileChooser.getSelectedFile();
-						FileOutputStream enr = new FileOutputStream(file);
-						ObjectOutputStream enregistre = new ObjectOutputStream(
-								enr);
+					FileUtils.save(enregistre, PanelDesign.getFormesGeo());
 
-						PanelDesign.enregistre(enregistre);
-
-					} catch (IOException io) {
-						System.exit(1);
-					}
+				} catch (IOException io) {
+					System.exit(1);
 				}
 			}
 		});
@@ -168,14 +154,7 @@ class DessinFrame extends JFrame {
 		JMenuItem Aucun = new JMenuItem("Aucun");
 		selectionMenu.add(Aucun);
 		Aucun.setAccelerator(KeyStroke.getKeyStroke("ESCAPE"));
-		Aucun.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				PanelDesign.clearSelected();
-			}
-
-		});
+		Aucun.addActionListener(e -> PanelDesign.clearSelected());
 		JMenuItem Colore = new JMenuItem("Colore");
 		selectionMenu.add(Colore);
 		Colore.setAccelerator(KeyStroke.getKeyStroke("ctrl R"));
@@ -263,8 +242,8 @@ class DessinFrame extends JFrame {
 	 * @param RadioButtonHandler
 	 *            une facon pour permettre la selection plus simple en nommant
 	 *            un nom qui peut etre verifier
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	private class RadioButtonHandler implements ItemListener {
 		private String name;
@@ -273,15 +252,11 @@ class DessinFrame extends JFrame {
 			name = s;
 		}
 
-		/**
-		 * @param itemStateChanged
-		 *            pour selectionnner par rapport au bouton radio cliquer
-		 */
 		public void itemStateChanged(ItemEvent e) {
 			if (name.equals("Rectangle"))
-				PanelDesign.setTypeDessin(FormGeo.Type.RECT);
+				PanelDesign.setTypeDessin(GeoFormType.RECT);
 			if (name.equals("Ellipse"))
-				PanelDesign.setTypeDessin(FormGeo.Type.ELLIPSE);
+				PanelDesign.setTypeDessin(GeoFormType.ELLIPSE);
 
 		}
 
