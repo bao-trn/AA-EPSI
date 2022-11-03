@@ -4,49 +4,30 @@ package drawing; /**************************************************************
  * les ellipses	on peut l'enregistre et ouvrir le meme fichier.				*											*
  * 																			*
  ****************************************************************************/
+
 import enums.GeoFormType;
+import states.ColorMenuItem;
+import states.DeleteMenuItem;
+import states.NoneMenuItem;
+import states.SelectAllMenuItem;
+import states.interfaces.MenuState;
 import utils.FileUtils;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.EventQueue;
-import java.awt.FlowLayout;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import javax.swing.ButtonGroup;
-import javax.swing.ImageIcon;
-import javax.swing.JColorChooser;
-import javax.swing.JComponent;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.KeyStroke;
+import java.io.*;
 
 public class DessinTest2 {
 
 	public static void main(String[] args) {
 		EventQueue.invokeLater(() -> {
 			DessinFrame application = new DessinFrame("paint drawing");
-			application.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			application.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
 			application.setSize(800, 600);
 			application.setVisible(true);
@@ -56,8 +37,8 @@ public class DessinTest2 {
 }
 
 class DessinFrame extends JFrame {
-	private DessinPanel2 PanelDesign;
-	private ColorComponent couleur;
+	private final DessinPanel2 PanelDesign;
+	private final ColorComponent couleur;
 
 	public DessinFrame(String titre) {
 		setTitle(titre);
@@ -129,56 +110,20 @@ class DessinFrame extends JFrame {
 		JMenuItem effacerItem = new JMenuItem("Effacer");
 		fichierMenu.add(effacerItem);
 		effacerItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
-		effacerItem.addActionListener(new ActionListener() {
-
-			public void actionPerformed(ActionEvent e) {
-				PanelDesign.clearAll();
-			}
-		});
+		effacerItem.addActionListener(e -> PanelDesign.clearAll());
 
 		JMenu selectionMenu = new JMenu("Selection");
 		fileMenu.add(selectionMenu);
 		
-		JMenuItem Tout = new JMenuItem("Tout");
-		selectionMenu.add(Tout);
-		Tout.setAccelerator(KeyStroke.getKeyStroke("ctrl A"));
-		Tout.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
+		MenuState selectAllKey = new SelectAllMenuItem();
+		MenuState noneKey = new NoneMenuItem();
+		MenuState colorKey = new ColorMenuItem();
+		MenuState deleteKey = new DeleteMenuItem();
+		selectionMenu.add(selectAllKey.setupKey(PanelDesign));
+		selectionMenu.add(noneKey.setupKey(PanelDesign));
+		selectionMenu.add(colorKey.setupKey(PanelDesign));
+		selectionMenu.add(deleteKey.setupKey(PanelDesign));
 
-				PanelDesign.selectTout();
-			}
-
-		});
-
-		JMenuItem Aucun = new JMenuItem("Aucun");
-		selectionMenu.add(Aucun);
-		Aucun.setAccelerator(KeyStroke.getKeyStroke("ESCAPE"));
-		Aucun.addActionListener(e -> PanelDesign.clearSelected());
-		JMenuItem Colore = new JMenuItem("Colore");
-		selectionMenu.add(Colore);
-		Colore.setAccelerator(KeyStroke.getKeyStroke("ctrl R"));
-		selectionMenu.addSeparator();
-		Colore.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				PanelDesign.coloreSelected();
-			}
-
-		});
-
-		JMenuItem Supprime = new JMenuItem("Supprime");
-		selectionMenu.add(Supprime);
-		Supprime.setAccelerator(KeyStroke.getKeyStroke("BACK_SPACE"));
-		Supprime.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-
-				PanelDesign.deleteSelected();
-			}
-
-		});
 		// PANNEAU DE BOUTON RADIO
 		/**
 		 * @param laBarreOutils
@@ -238,13 +183,6 @@ class DessinFrame extends JFrame {
 
 	}
 
-	/**
-	 * @param RadioButtonHandler
-	 *            une facon pour permettre la selection plus simple en nommant
-	 *            un nom qui peut etre verifier
-	 *
-	 *
-	 */
 	private class RadioButtonHandler implements ItemListener {
 		private String name;
 
@@ -268,15 +206,9 @@ class DessinFrame extends JFrame {
 
 }
 
-/**
- * 
- * @param ColorComponent
- *            Pallette de couleur
- */
-
 class ColorComponent extends JComponent {
 	private Color c;
-	private Rectangle2D rect;
+	private final Rectangle2D rect;
 
 	public ColorComponent(Color c) {
 		super();

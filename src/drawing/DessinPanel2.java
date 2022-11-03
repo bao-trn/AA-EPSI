@@ -35,10 +35,11 @@ public class DessinPanel2 extends JPanel {
 	private final ArrayList<FormGeo> formesGeo;
 	private final ArrayList<FormGeo> selectedFormesGeo;
 	private FormGeo geoForm;
-	private Point2D lastPointPress;
+	private transient Point2D lastPointPress;
 	private FormGeo lastFormGeo = null;
 
-	private int allSelected;
+	private int allSelected
+			;
 
 	private Color color;
 
@@ -63,10 +64,7 @@ public class DessinPanel2 extends JPanel {
 
 	// EFFACE LA FIGURE SELECTIONNER
 	public void clearSelected() {
-
-		for (FormGeo f : selectedFormesGeo) {
-			f.setSelected(new NotSelectedState());
-		}
+		selectedFormesGeo.forEach(shape -> shape.setSelected(new NotSelectedState()));
 		selectedFormesGeo.clear();
 		repaint();
 	}
@@ -74,29 +72,21 @@ public class DessinPanel2 extends JPanel {
 	// EFFACE LA FIGURE CONTENU DANS LE TABLEAU
 	/** selectedFormesGeo */
 	public void deleteSelected() {
-
-		for (FormGeo f : selectedFormesGeo) {
-			formesGeo.remove(f);
-		}
+		selectedFormesGeo.forEach(formesGeo::remove);
 		selectedFormesGeo.clear();
 		repaint();
 	}
 
-	public void selectTout() {
+	public void selectAll() {
 		allSelected = 1;
 		selectedFormesGeo.clear();
 		selectedFormesGeo.addAll(formesGeo);
-		for (FormGeo f : selectedFormesGeo) {
-			f.setSelected(new SelectedState());
-		}
+		selectedFormesGeo.forEach(shape -> shape.setSelected(new SelectedState()));
 		repaint();
 	}
 
 	public void coloreSelected() {
-		Color couleur = FormGeo.getCurrentColor();
-		for (FormGeo f : selectedFormesGeo) {
-			f.setColor(couleur);
-		}
+		selectedFormesGeo.forEach(shape -> shape.setColor(FormGeo.getCurrentColor()));
 		paintComponent(getGraphics());
 	}
 
@@ -104,12 +94,11 @@ public class DessinPanel2 extends JPanel {
 		FormGeo.setCurrentColor(c);
 	}
 
-	public void setTypeDessin(GeoFormType f) {
-		geoFormType = f;
+	public void setTypeDessin(GeoFormType type) {
+		geoFormType = type;
 	}
 
 	public FormGeo find(Point2D p) {
-
 		for (FormGeo f : formesGeo) {
 			if (f.getRectangularShape().contains(p)) {
 				return f;
@@ -128,7 +117,7 @@ public class DessinPanel2 extends JPanel {
 				lightSquares(g2, geoForm.getRectangularShape());
 				repaint();
 			}
-			if (formesGeo.size() == selectedFormesGeo.size()) {// TOUTSELEC EST UTILISER POUR
+			if (allSelected == 1) {// TOUTSELEC EST UTILISER POUR
 				for (FormGeo selec : selectedFormesGeo) {
 					lightSquares(g2, selec.getRectangularShape());
 					repaint();
@@ -230,21 +219,14 @@ public class DessinPanel2 extends JPanel {
 							// et le deplacer en meme temp
 							// en cas ou on clique appui pas la touche
 							// majuscule enfoncer
-							if (selectedFormesGeo.size() >= 0)
-								selectedFormesGeo.clear();// retour rien
+							selectedFormesGeo.clear();// retour rien
 															// dans le
 															// tableau
 
 						}
 
 					}
-					/**
-					 * @exception ConcurrentModificationException
-					 *                Cette exception peut être levée par les
-					 *                méthodes qui ont détecté une modification
-					 *                concurrente d'un objet lorsque cette
-					 *                modification n'est pas autorisée.
-					 */
+
 				} catch (ConcurrentModificationException e) {
 					allSelected = 0;
 				}
