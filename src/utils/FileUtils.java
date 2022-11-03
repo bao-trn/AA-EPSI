@@ -5,7 +5,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.List;
 
-import Geometry.FormGeo;
+import geometry.FormGeo;
+import states.SelectedState;
 
 import javax.swing.*;
 
@@ -18,7 +19,7 @@ public class FileUtils extends JPanel{
     public static void save(ObjectOutputStream out, List<FormGeo> geoFormList) {
         try {
             for (FormGeo f : geoFormList) {
-                f.setSelected(true);
+                f.setSelected(new SelectedState());
                 out.writeObject(f);
 
             }

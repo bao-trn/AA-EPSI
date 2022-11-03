@@ -1,10 +1,12 @@
-package Geometry; /****************************************************************************
+package geometry; /****************************************************************************
  * @author Josaphat Mayuba Ndele	et Andres Garcia Cotton					*					*
  * Les programmes permet a faire de dessin de forme rectanglulaire et 		*
  * les ellipses	on peut l'enregistre et ouvrir le meme fichier.				*											*
  * 																			*
  ****************************************************************************/
 import enums.GeoFormType;
+import states.NotSelectedState;
+import states.interfaces.ShapeState;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -16,9 +18,9 @@ import java.io.Serializable;
 
 public class FormGeo implements Serializable {
 
+	private ShapeState selected = new NotSelectedState();
 	private static Color currentColor = Color.BLACK;
 	private Color color;
-	private boolean selected;
 	private transient RectangularShape rectangularShape;
 
 
@@ -68,12 +70,12 @@ public class FormGeo implements Serializable {
 		this.color = color;
 	}
 
-	public boolean isSelected() {
+	public ShapeState isSelected() {
 		return selected;
 	}
 
-	public void setSelected(boolean selected) {
-		this.selected = selected;
+	public void setSelected(ShapeState state) {
+		this.selected = state;
 	}
 
 	public RectangularShape getRectangularShape() {

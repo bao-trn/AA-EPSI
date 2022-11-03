@@ -4,9 +4,11 @@ package drawing; /**************************************************************
  * les ellipses	on peut l'enregistre et ouvrir le meme fichier.				*											*
  * 																			*
  ****************************************************************************/
-import Geometry.FormGeo;
+import geometry.FormGeo;
 import constants.GeoConstants;
 import enums.GeoFormType;
+import states.NotSelectedState;
+import states.SelectedState;
 
 import java.awt.Color;
 import java.awt.Cursor;
@@ -32,7 +34,6 @@ public class DessinPanel2 extends JPanel {
 
 	private final ArrayList<FormGeo> formesGeo;
 	private final ArrayList<FormGeo> selectedFormesGeo;
-
 	private FormGeo geoForm;
 	private Point2D lastPointPress;
 	private FormGeo lastFormGeo = null;
@@ -41,7 +42,7 @@ public class DessinPanel2 extends JPanel {
 
 	private Color color;
 
-	private GeoFormType geoFormType = GeoFormType.RECT.RECT;
+	private GeoFormType geoFormType = GeoFormType.RECT;
 
 	private int touche;
 
@@ -55,7 +56,6 @@ public class DessinPanel2 extends JPanel {
 
 	// EFFACE TOUT
 	public void clearAll() {
-
 		clearSelected();
 		formesGeo.clear();
 		paintComponent(getGraphics());
@@ -65,7 +65,7 @@ public class DessinPanel2 extends JPanel {
 	public void clearSelected() {
 
 		for (FormGeo f : selectedFormesGeo) {
-			f.setSelected(false);
+			f.setSelected(new NotSelectedState());
 		}
 		selectedFormesGeo.clear();
 		repaint();
@@ -76,7 +76,7 @@ public class DessinPanel2 extends JPanel {
 	public void deleteSelected() {
 
 		for (FormGeo f : selectedFormesGeo) {
-			remove(f);
+			formesGeo.remove(f);
 		}
 		selectedFormesGeo.clear();
 		repaint();
@@ -87,7 +87,7 @@ public class DessinPanel2 extends JPanel {
 		selectedFormesGeo.clear();
 		selectedFormesGeo.addAll(formesGeo);
 		for (FormGeo f : selectedFormesGeo) {
-			f.setSelected(true);
+			f.setSelected(new SelectedState());
 		}
 		repaint();
 	}
@@ -128,7 +128,7 @@ public class DessinPanel2 extends JPanel {
 				lightSquares(g2, geoForm.getRectangularShape());
 				repaint();
 			}
-			if (allSelected == 1) {// TOUTSELEC EST UTILISER POUR
+			if (formesGeo.size() == selectedFormesGeo.size()) {// TOUTSELEC EST UTILISER POUR
 				for (FormGeo selec : selectedFormesGeo) {
 					lightSquares(g2, selec.getRectangularShape());
 					repaint();
@@ -153,14 +153,6 @@ public class DessinPanel2 extends JPanel {
 
 	}
 
-	public void add(FormGeo f) {
-		formesGeo.add(f);
-	}
-
-	public void remove(FormGeo f) {
-		// ton code
-		formesGeo.remove(f);
-	}
 
 	// LORS LA SOURIS EST PRESSER
 
@@ -184,10 +176,10 @@ public class DessinPanel2 extends JPanel {
 				FormGeo f = new FormGeo(geoFormType, x - GeoConstants.SQUARE_SIZE / 2, y
 						- GeoConstants.SQUARE_SIZE / 2, GeoConstants.SQUARE_SIZE, GeoConstants.SQUARE_SIZE);
 				f.setColor(FormGeo.getCurrentColor());
-				add(f);
+				formesGeo.add(f);
 			} else {
 				if (!selectedFormesGeo.contains(geoForm)) {
-					geoForm.setSelected(true);
+					geoForm.setSelected(new SelectedState());
 					selectedFormesGeo.add(geoForm);
 				}
 			}
@@ -215,7 +207,7 @@ public class DessinPanel2 extends JPanel {
 				if (lastFormGeo == null) {
 					lastFormGeo = new FormGeo(geoFormType);
 					lastFormGeo.setColor(FormGeo.getCurrentColor());
-					add(lastFormGeo);
+					formesGeo.add(lastFormGeo);
 				}
 				lastFormGeo.setFrameFromDiagonal(lastPointPress, p);
 			} else {
@@ -238,11 +230,7 @@ public class DessinPanel2 extends JPanel {
 							// et le deplacer en meme temp
 							// en cas ou on clique appui pas la touche
 							// majuscule enfoncer
-							if (selectedFormesGeo.size() >= 0)// si la
-																// taille du
-																// tableau
-								// selectedFormGeo est egal et superieur a
-								// zero
+							if (selectedFormesGeo.size() >= 0)
 								selectedFormesGeo.clear();// retour rien
 															// dans le
 															// tableau
