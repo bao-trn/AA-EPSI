@@ -56,53 +56,10 @@ class DessinFrame extends JFrame {
 		setJMenuBar(fileMenu);
 		JMenu fichierMenu = new JMenu("Fichier");
 		fileMenu.add(fichierMenu);
-		JMenuItem openItem = new JMenuItem("Ouvrir");
-		JMenuItem sauvegarderItem = new JMenuItem("Enregistrer");
-		
-		
-		// TOUCHE RELIER AU MENU
-		openItem.setAccelerator(KeyStroke.getKeyStroke("ctrl O"));
-		sauvegarderItem.setAccelerator(KeyStroke.getKeyStroke("ctrl S"));
-		
-		
-		// LES ACTION POUR SOUS MENU OUVRIR ET SAUVERGARDER
-		openItem.addActionListener(x -> {
-			JFileChooser fileChooser = new JFileChooser();
-			int result = fileChooser.showOpenDialog(null);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				try {
-					File file2 = fileChooser.getSelectedFile();
-					FileInputStream ouvre = new FileInputStream(file2);
-					ObjectInputStream ouvrir = new ObjectInputStream(ouvre);
-					FileUtils.readInfo(ouvrir, PanelDesign.getFormesGeo());
 
-				} catch (IOException | ClassNotFoundException e) {
-					System.exit(1);
-				}
-			}
-		});
-		sauvegarderItem.addActionListener(e -> {
-			JFileChooser fileChooser = new JFileChooser();
-			int result = fileChooser.showSaveDialog(null);
-			if (result == JFileChooser.APPROVE_OPTION) {
-				try {
-					File file = fileChooser.getSelectedFile();
-					FileOutputStream enr = new FileOutputStream(file);
-					ObjectOutputStream enregistre = new ObjectOutputStream(enr);
+		createFileMenuOption(fichierMenu, "open", "ctrl O", true);
+		createFileMenuOption(fichierMenu, "save", "ctrl S", false);
 
-					FileUtils.save(enregistre, PanelDesign.getFormesGeo());
-
-				} catch (IOException io) {
-					System.exit(1);
-				}
-			}
-		});
-
-		// affche menu ouvrir
-		fichierMenu.add(openItem);
-		fichierMenu.add(sauvegarderItem);
-		
-		
 		// SEPARATEUR
 		fichierMenu.addSeparator();
 
@@ -180,6 +137,30 @@ class DessinFrame extends JFrame {
 		laBarreOutils.setLayout(new FlowLayout(FlowLayout.LEFT, 15, 15));
 
 		this.add(laBarreOutils, BorderLayout.NORTH);
+
+	}
+
+	public void createFileMenuOption(JMenu jMenu, String optionName, String keyToPress, boolean input) {
+		JMenuItem menuItem = new JMenuItem(optionName);
+		menuItem.setAccelerator(KeyStroke.getKeyStroke(keyToPress));
+		menuItem.addActionListener(a -> {
+			JFileChooser fileChooser = new JFileChooser();
+			try {
+				File file = fileChooser.getSelectedFile();
+				if (input && fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
+					FileUtils.readInfo(objectInputStream, PanelDesign.getFormesGeo());
+				} else if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+					ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
+					FileUtils.save(objectOutputStream, PanelDesign.getFormesGeo());
+				}
+
+			} catch (IOException | ClassNotFoundException e) {
+				System.exit(1);
+			}
+			jMenu.add(menuItem);
+
+		});
 
 	}
 
