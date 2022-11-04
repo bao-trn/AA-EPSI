@@ -37,7 +37,7 @@ public class DessinTest2 {
 }
 
 class DessinFrame extends JFrame {
-	private final DessinPanel2 PanelDesign;
+	private final DessinPanel2 panelDesign;
 	private final ColorComponent couleur;
 
 	public DessinFrame(String titre) {
@@ -45,62 +45,48 @@ class DessinFrame extends JFrame {
 		
 		
 		// PANNEAU DE DESSIN
-		PanelDesign = new DessinPanel2();
-		PanelDesign.setCouleur(Color.BLACK);
-		PanelDesign.setBackground(Color.WHITE);
-		this.add(PanelDesign, BorderLayout.CENTER);
+		panelDesign = new DessinPanel2();
+		panelDesign.setCouleur(Color.BLACK);
+		panelDesign.setBackground(Color.WHITE);
+		this.add(panelDesign, BorderLayout.CENTER);
 		this.add(new JLabel("Clic et drag pour dessiner"), BorderLayout.SOUTH);
 
 		// construction du menu
 		JMenuBar fileMenu = new JMenuBar();
 		setJMenuBar(fileMenu);
 		JMenu fichierMenu = new JMenu("Fichier");
+		JMenu selectionMenu = new JMenu("Selection");
 		fileMenu.add(fichierMenu);
-
-		createFileMenuOption(fichierMenu, "open", "ctrl O", true);
-		createFileMenuOption(fichierMenu, "save", "ctrl S", false);
-
-		// SEPARATEUR
+		fileMenu.add(selectionMenu);
+		
+		addFileMenuListener(fichierMenu, "Open", "ctrl O", true);
+		addFileMenuListener(fichierMenu, "Save", "ctrl S", false);
+		
 		fichierMenu.addSeparator();
 
-		// AUTRE SOUS MENU,LEURS TOUCHES ET LEURS ACTIONS
-		JMenuItem effacerItem = new JMenuItem("Effacer");
-		fichierMenu.add(effacerItem);
-		effacerItem.setAccelerator(KeyStroke.getKeyStroke("ctrl C"));
-		effacerItem.addActionListener(e -> PanelDesign.clearAll());
-
-		JMenu selectionMenu = new JMenu("Selection");
-		fileMenu.add(selectionMenu);
+		addClearFileMenuListener(fichierMenu);
 		
 		MenuState selectAllKey = new SelectAllMenuItem();
 		MenuState noneKey = new NoneMenuItem();
 		MenuState colorKey = new ColorMenuItem();
 		MenuState deleteKey = new DeleteMenuItem();
-		selectionMenu.add(selectAllKey.setupKey(PanelDesign));
-		selectionMenu.add(noneKey.setupKey(PanelDesign));
-		selectionMenu.add(colorKey.setupKey(PanelDesign));
-		selectionMenu.add(deleteKey.setupKey(PanelDesign));
+		selectionMenu.add(selectAllKey.setupKey(panelDesign));
+		selectionMenu.add(noneKey.setupKey(panelDesign));
+		selectionMenu.add(colorKey.setupKey(panelDesign));
+		selectionMenu.add(deleteKey.setupKey(panelDesign));
 
-		// PANNEAU DE BOUTON RADIO
-		/**
-		 * @param laBarreOutils
-		 *            laBarreOutils contient des boutons qui permet a
-		 *            l'utilisation ou la selecion de couleur et des different
-		 *            forme a dessiner
-		 * 
-		 */
 		JPanel laBarreOutils = new JPanel();
 
-		String chemin_img = System.getProperty("user.dir") + File.separator
+		String imgPath = System.getProperty("user.dir") + File.separator
 				+ "images" + File.separator;
 		// *BOUTON RADIO
-		JRadioButton ellipse = new JRadioButton(new ImageIcon(chemin_img
+		JRadioButton ellipse = new JRadioButton(new ImageIcon(imgPath
 				+ "ellipse.png"));
-		ellipse.setSelectedIcon(new ImageIcon(chemin_img + "ellipseSelect.png"));
+		ellipse.setSelectedIcon(new ImageIcon(imgPath + "ellipseSelect.png"));
 
-		JRadioButton rectangle = new JRadioButton(new ImageIcon(chemin_img
+		JRadioButton rectangle = new JRadioButton(new ImageIcon(imgPath
 				+ "rectangle.png"));
-		rectangle.setSelectedIcon(new ImageIcon(chemin_img
+		rectangle.setSelectedIcon(new ImageIcon(imgPath
 				+ "rectangleSelect.png"));
 
 		laBarreOutils.add(rectangle);
@@ -108,6 +94,7 @@ class DessinFrame extends JFrame {
 		couleur = new ColorComponent(Color.BLACK);
 		couleur.addMouseListener(new MouseAdapter() {
 
+			@Override
 			public void mouseClicked(MouseEvent e) {
 				Color defeaultColor = getBackground();
 				Color selected = JColorChooser.showDialog(DessinFrame.this,
@@ -115,7 +102,7 @@ class DessinFrame extends JFrame {
 
 				if (selected != null) {
 					couleur.setColor(selected);
-					PanelDesign.setCouleur(selected);
+					panelDesign.setCouleur(selected);
 				}
 			}
 		});
@@ -140,28 +127,37 @@ class DessinFrame extends JFrame {
 
 	}
 
-	public void createFileMenuOption(JMenu jMenu, String optionName, String keyToPress, boolean input) {
-		JMenuItem menuItem = new JMenuItem(optionName);
+	public JMenuItem setupKey(String itemName, String keyToPress) {
+		JMenuItem menuItem = new JMenuItem(itemName);
 		menuItem.setAccelerator(KeyStroke.getKeyStroke(keyToPress));
-		menuItem.addActionListener(a -> {
+		return  menuItem;
+	}
+	
+	public void addClearFileMenuListener(JMenu jMenu) {
+		JMenuItem item = setupKey("Clear", "ctrl C");
+		item.addActionListener(a -> panelDesign.clearAll());
+		jMenu.add(item);
+	}
+	public void addFileMenuListener(JMenu jMenu, String itemName, String keyToPress, boolean input) {
+		JMenuItem item = setupKey(itemName, keyToPress);
+		item.addActionListener(a -> {
 			JFileChooser fileChooser = new JFileChooser();
 			try {
 				File file = fileChooser.getSelectedFile();
 				if (input && fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
 					ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
-					FileUtils.readInfo(objectInputStream, PanelDesign.getFormesGeo());
+					FileUtils.readInfo(objectInputStream, panelDesign.getFormesGeo());
 				} else if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
 					ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(file));
-					FileUtils.save(objectOutputStream, PanelDesign.getFormesGeo());
+					FileUtils.save(objectOutputStream, panelDesign.getFormesGeo());
 				}
 
 			} catch (IOException | ClassNotFoundException e) {
 				System.exit(1);
 			}
-			jMenu.add(menuItem);
 
 		});
-
+		jMenu.add(item);
 	}
 
 	private class RadioButtonHandler implements ItemListener {
@@ -173,9 +169,9 @@ class DessinFrame extends JFrame {
 
 		public void itemStateChanged(ItemEvent e) {
 			if (name.equals("Rectangle"))
-				PanelDesign.setTypeDessin(GeoFormType.RECT);
+				panelDesign.setTypeDessin(GeoFormType.RECT);
 			if (name.equals("Ellipse"))
-				PanelDesign.setTypeDessin(GeoFormType.ELLIPSE);
+				panelDesign.setTypeDessin(GeoFormType.ELLIPSE);
 
 		}
 
